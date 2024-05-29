@@ -1,10 +1,8 @@
 """
 # References
 # https://github.com/merlresearch/SMART
-# CVPR SMART article https://arxiv.org/pdf/2212.09993.pdf
 
 # adsformers https://ui.adsabs.harvard.edu/abs/2023arXiv230201255A/abstract
-# eficient vit image representations https://www.researchgate.net/profile/Denisa-Roberts/publication/370980888_Efficient_Large-Scale_Vision_Representation_Learning/links/64ecf9d99b1e56033da9d827/Efficient-Large-Scale-Vision-Representation-Learning.pdf
 
 # prismatic vlm https://arxiv.org/pdf/2402.07865.pdf
 # qformer https://arxiv.org/pdf/2301.12597
@@ -52,8 +50,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"Available GPUs {AVAIL_GPUS} and current device {device}")
 
-API_KEY = Path("modules/denisa_vlm_reasoners/.comet_token").read_text().strip()
-workspace = Path("modules/denisa_vlm_reasoners/.comet_workspace").read_text().strip()
+API_KEY = Path("modules/.comet_token").read_text().strip()
+workspace = Path("modules/.comet_workspace").read_text().strip()
 
 experiment = Experiment(
     api_key=API_KEY,
@@ -61,8 +59,6 @@ experiment = Experiment(
     workspace=workspace,
     auto_metric_logging=True,  # default
 )
-
-# For training direct baselines from SMART CVPR'23 article: https://github.com/D-Roberts/SMART
 
 
 def reset_state(args):
@@ -249,7 +245,7 @@ def train(args, dataloader, im_backbone):
 
     num_steps = args.num_epochs * len(train_loader)
 
-    num_warmup_steps = 10  # TODO DR: no hardcoding
+    num_warmup_steps = 10  # TODO: no hardcoding
 
     if not args.run_baseline:
         scheduler = get_cosine_schedule_with_warmup(
@@ -427,7 +423,6 @@ if __name__ == "__main__":
         help="add a q-former inspired layer to get a composite vision-language representation",
     )
 
-    # Ref for baseline choices https://github.com/D-Roberts/SMART/tree/main (code forked from original paper's repo)
     parser.add_argument(
         "--run_baseline",
         action="store_true",

@@ -1,14 +1,13 @@
-# Copyright 
-
-# References
+""" 
+References
 
 # adsformers https://ui.adsabs.harvard.edu/abs/2023arXiv230201255A/abstract
-# eficient vit image representations https://www.researchgate.net/profile/Denisa-Roberts/publication/370980888_Efficient_Large-Scale_Vision_Representation_Learning/links/64ecf9d99b1e56033da9d827/Efficient-Large-Scale-Vision-Representation-Learning.pdf
 
 # prismatic vlm https://arxiv.org/pdf/2402.07865.pdf
 # qformer https://arxiv.org/pdf/2301.12597
 
 # mbert https://link.springer.com/chapter/10.1007/978-3-030-72240-1_36
+"""
 
 import math
 import torch
