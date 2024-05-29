@@ -1,4 +1,4 @@
-To run training and eval (need at least 40GB mem, 166 cores, and preferably a V100 GPU):
+To run training and eval (need at least 40GB mem, 16 cores, and preferably a V100 GPU):
 
 ```
 conda create --name smarter python=3.10
