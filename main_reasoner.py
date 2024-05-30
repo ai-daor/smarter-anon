@@ -3,6 +3,7 @@
 # https://github.com/merlresearch/SMART
 
 # adsformers https://ui.adsabs.harvard.edu/abs/2023arXiv230201255A/abstract
+# eficient vit image representations https://www.researchgate.net/profile/Denisa-Roberts/publication/370980888_Efficient_Large-Scale_Vision_Representation_Learning/links/64ecf9d99b1e56033da9d827/Efficient-Large-Scale-Vision-Representation-Learning.pdf
 
 # prismatic vlm https://arxiv.org/pdf/2402.07865.pdf
 # qformer https://arxiv.org/pdf/2301.12597
@@ -16,12 +17,10 @@ import os
 from pathlib import Path
 
 import comet_ml
-import pytorch_lightning as pl
+API_KEY = Path(".comet_api").read_text().strip()
+comet_ml.init(api_key=API_KEY)
 
 import numpy as np
-from comet_ml import Experiment
-from comet_ml.integration.pytorch import log_model
-
 import torch
 
 os.environ["TOKENIZERS_PARALLELISM"] = "1"
@@ -45,20 +44,13 @@ import utils
 
 from transformers.optimization import get_cosine_schedule_with_warmup
 
+
 AVAIL_GPUS = min(1, torch.cuda.device_count())
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"Available GPUs {AVAIL_GPUS} and current device {device}")
 
-API_KEY = Path("modules/.comet_token").read_text().strip()
-workspace = Path("modules/.comet_workspace").read_text().strip()
-
-experiment = Experiment(
-    api_key=API_KEY,
-    project_name="multimodalai",
-    workspace=workspace,
-    auto_metric_logging=True,  # default
-)
+# For training direct baselines from SMART CVPR'23 article: https://github.com/D-Roberts/SMART
 
 
 def reset_state(args):
@@ -85,8 +77,6 @@ def train(args, dataloader, im_backbone):
 
     model.to(device)
     # print("\n Model architecture: \n", model)
-
-    log_model(experiment, model, model_name="Puzzle_Net")
 
     def normalize(err, pids):
         """this function divides the error by the gt number of classes for each puzzle."""
@@ -143,7 +133,7 @@ def train(args, dataloader, im_backbone):
 
             tot_loss += loss.item()
 
-            experiment.log_metrics({"train_batch_loss": loss.item()}, step=i)
+            exp.log_metrics({"train_batch_loss": loss.item()}, step=i)
 
         tot_loss /= float(i)
         return tot_loss
@@ -167,7 +157,7 @@ def train(args, dataloader, im_backbone):
                 val_loss = criterion(out, av, pids)
                 val_tot_loss += val_loss.item()
 
-                experiment.log_metrics({"val_batch_loss": val_loss.item()}, step=i)
+                exp.log_metrics({"val_batch_loss": val_loss.item()}, step=i)
 
                 av = av.cpu()
                 upids = torch.unique(pids)
@@ -245,7 +235,7 @@ def train(args, dataloader, im_backbone):
 
     num_steps = args.num_epochs * len(train_loader)
 
-    num_warmup_steps = 10  # TODO: no hardcoding
+    num_warmup_steps = 10  # TODO DR: no hardcoding
 
     if not args.run_baseline:
         scheduler = get_cosine_schedule_with_warmup(
@@ -262,22 +252,20 @@ def train(args, dataloader, im_backbone):
     print("starting training...")
     for epoch in range(args.num_epochs):
         tt = time.time()
-        model.train()
 
         # jsut in case
         optimizer.zero_grad()
 
         loss = train_loop(epoch, train_loader, optimizer)
 
-        experiment.log_metrics({"epoch_train_loss": loss}, epoch=epoch)
+        exp.log_metrics({"epoch_train_loss": loss}, epoch=epoch)
 
         tt = time.time() - tt
 
         if epoch >= 0:  # always eval
-            model.eval()
 
             acc, err, puz_acc, val_tot_loss = val_loop(val_loader, model)
-            experiment.log_metrics(
+            exp.log_metrics(
                 {
                     "val_acc": acc,
                     "val_var": err,
@@ -289,8 +277,8 @@ def train(args, dataloader, im_backbone):
 
             class_avg_perf = utils.print_puzz_acc(args, puz_acc, log=args.log)
 
-            with experiment.context_manager("val_acc"):
-                experiment.log_metrics(
+            with exp.context_manager("val_acc"):
+                exp.log_metrics(
                     {k: v[0] for k, v in class_avg_perf.items()}, epoch=epoch
                 )
 
@@ -346,6 +334,13 @@ def get_data_loader(
 
 if __name__ == "__main__":
 
+    workspace = Path(".comet_workspace").read_text().strip()
+    exp = comet_ml.Experiment(
+        api_key=API_KEY,
+        project_name="smarter",
+        workspace=workspace,
+        auto_metric_logging=True,  # default
+    )
     parser = argparse.ArgumentParser(description="SMART puzzles")
     parser.add_argument(
         "--puzzles",
@@ -423,6 +418,7 @@ if __name__ == "__main__":
         help="add a q-former inspired layer to get a composite vision-language representation",
     )
 
+    # Ref for baseline choices https://github.com/D-Roberts/SMART/tree/main (code forked from original paper's repo)
     parser.add_argument(
         "--run_baseline",
         action="store_true",
@@ -552,3 +548,4 @@ if __name__ == "__main__":
     print("num_puzzles=%d" % (len(args.puzzle_ids)))
 
     train(args, dataloader, im_backbone)
+    exp.end()
