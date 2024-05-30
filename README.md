@@ -3,7 +3,7 @@
 
 ```bash
 git clone https://github.com/ai-daor/smarter-anon.git
-cd smarter
+cd smarter-anon
 conda create --name smarter python=3.10
 conda activate smarter
 pip install -r requirements.txt
@@ -61,7 +61,7 @@ Args are described in *main_reasoner.py*.
 
 Experiments are tracked in CometML. A public account is made available for trying out the code, and experiment panels (loss and accuracy curves) can be seen here [https://www.comet.com/ai-daor/smarter/view/new/panels](https://www.comet.com/ai-daor/smarter/view/new/panels).
 
-To be able to create personal experiments, a Comet API Key must be created and placed in the <root_dir>/.comet_token file and a Comet account username must be written to  <root_dir>/.comet_workspace, replacing the public one (from [CometML](https://www.comet.com)).
+To be able to create personal experiments, a Comet API Key must be created and placed in the smarter-anon/.comet_token file and a Comet account username must be written to  smarter-anon/.comet_workspace, replacing the public one (from [CometML](https://www.comet.com)).
 
 
 ## Final Models
