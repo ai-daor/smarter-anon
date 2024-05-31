@@ -3,7 +3,7 @@
 
 ```bash
 git clone https://github.com/ai-daor/smarter-anon.git
-cd smarter
+cd smarter-anon
 conda create --name smarter python=3.10
 conda activate smarter
 pip install -r requirements.txt
